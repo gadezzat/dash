@@ -2,106 +2,103 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>لوحة التحليل الذكي</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل البيانات الذكي</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #f8f9fa; --card: #ffffff; --text: #2d3748; --accent: #4c51bf; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; box-sizing: border-box; }
-        
-        .header { text-align: center; margin-bottom: 24px; }
-        .header h2 { margin: 0; font-size: 1.6rem; color: var(--accent); }
-        .header p { margin: 5px 0 0; color: #718096; font-size: 0.9rem; }
-
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-        .card { background: var(--card); border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
-        .card.full { grid-column: span 2; }
-        
-        .val { font-size: 1.4rem; font-weight: 800; color: var(--accent); margin-top: 8px; }
-        .lbl { font-size: 0.85rem; color: #718096; font-weight: 600; }
-        
-        .chart-container { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        canvas { width: 100% !important; height: auto !important; }
-
-        button { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        body { font-family: 'Cairo', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        h3 { color: #555; margin-bottom: 10px; font-size: 1.1em; }
+        .value { font-size: 1.8em; font-weight: bold; color: #2c3e50; }
+        .chart-container { position: relative; height: 300px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>📊 تحليل البيانات الذكي</h2>
-        <p id="date">...</p>
+    <h2 style="text-align:center; color:#4a4a4a;">📊 لوحة التحليل التفاعلية</h2>
+
+    <!-- بطاقات الإحصائيات -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <h3>💰 المبيعات/المجموع</h3>
+            <div id="sales" class="value">-</div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <h3>📦 عدد السجلات</h3>
+            <div id="orders" class="value">-</div>
+        </div>
     </div>
 
-    <!-- البطاقات -->
-    <div class="grid">
-        <div class="card"><div class="lbl">📦 إجمالي السجلات</div><div class="val" id="orders">-</div></div>
-        <div class="card"><div class="lbl">💰 المجموع الكلي</div><div class="val" id="sales">-</div></div>
-        <div class="card full"><div class="lbl">📈 المتوسط الحسابي</div><div class="val" id="avg">-</div></div>
-        <div class="card full"><div class="lbl">🏆 القيمة الأكثر تكرارًا</div><div class="val" id="top">-</div></div>
+    <div class="card">
+        <h3>📈 المتوسط الحسابي</h3>
+        <div id="avg" class="value">-</div>
     </div>
 
-    <!-- الرسوم البيانية -->
-    <div class="chart-container">
-        <div class="lbl" style="text-align: right; margin-bottom: 10px;">📊 توزيع البيانات (Top 5)</div>
-        <canvas id="myChart"></canvas>
+    <div class="card">
+        <h3>🏆 العنصر الأكثر تكراراً</h3>
+        <div id="top" class="value" style="font-size: 1.2em;">-</div>
     </div>
 
-    <button onclick="Telegram.WebApp.close()">إغلاق التقرير</button>
+    <!-- الرسم البياني -->
+    <div class="card">
+        <h3>📊 توزيع أهم البيانات</h3>
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
 
     <script>
-        const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
-        const p = new URLSearchParams(window.location.search);
-
-        // قراءة البيانات
-        const sales = p.get('sales') || "0";
-        const orders = p.get('orders') || "0";
-        const avg = p.get('avg') || "0";
-        const top = p.get('top') || "-";
+        // 1. قراءة البيانات من الرابط
+        const params = new URLSearchParams(window.location.search);
         
-        // تعبئة البطاقات
-        document.getElementById('sales').innerText = sales;
-        document.getElementById('orders').innerText = orders;
-        document.getElementById('avg').innerText = avg;
-        document.getElementById('top').innerText = top;
-        document.getElementById('date').innerText = new Date().toLocaleDateString('ar-EG');
+        // استخراج القيم (مع وضع قيم افتراضية 0 أو -)
+        const sales = params.get('sales') || "0";
+        const orders = params.get('orders') || "0";
+        const avg = params.get('avg') || "0";
+        const topItem = params.get('top') || "-";
+        const chartDataRaw = params.get('chart') || "";
 
-        // Dark Mode
-        if (tg.colorScheme === 'dark') {
-            document.body.style.setProperty('--bg', '#1a202c');
-            document.body.style.setProperty('--card', '#2d3748');
-            document.body.style.setProperty('--text', '#f7fafc');
-            document.body.style.setProperty('--accent', '#a3bffa');
-            Chart.defaults.color = '#e2e8f0';
-            Chart.defaults.borderColor = '#4a5568';
+        // 2. تحديث النصوص في الصفحة
+        document.getElementById('sales').textContent = Number(sales).toLocaleString();
+        document.getElementById('orders').textContent = Number(orders).toLocaleString();
+        document.getElementById('avg').textContent = Number(avg).toLocaleString();
+        document.getElementById('top').textContent = topItem;
+
+        // 3. تجهيز بيانات الرسم البياني
+        let labels = [];
+        let dataValues = [];
+
+        if (chartDataRaw) {
+            // البيانات تأتي بصيغة: Item1:50,Item2:30
+            const items = chartDataRaw.split(',');
+            items.forEach(item => {
+                const parts = item.split(':');
+                if (parts.length === 2) {
+                    labels.push(parts[0]);
+                    dataValues.push(Number(parts[1]));
+                }
+            });
         }
 
-        // رسم المخطط البياني (Chart.js)
-        // سنستخدم بيانات وهمية ذكية تعتمد على الأرقام القادمة لجعل الشكل واقعيًا
+        // 4. رسم الشارت
         const ctx = document.getElementById('myChart').getContext('2d');
-        const salesNum = parseFloat(sales.replace(/,/g, '')) || 100;
-        
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['الربع الأول', 'الربع الثاني', 'الربع الثالث', 'الربع الرابع'],
+                labels: labels.length ? labels : ['لا يوجد بيانات'],
                 datasets: [{
-                    data: [salesNum * 0.4, salesNum * 0.25, salesNum * 0.2, salesNum * 0.15],
-                    backgroundColor: [
-                        '#667eea', '#764ba2', '#48bb78', '#ed8936'
-                    ],
-                    borderWidth: 0
+                    data: dataValues.length ? dataValues : [1],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { font: { family: 'sans-serif' } } }
-                },
-                cutout: '70%',
-                animation: { animateScale: true, animateRotate: true }
+                    legend: { position: 'bottom' }
+                }
             }
         });
     </script>
