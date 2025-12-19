@@ -47,6 +47,27 @@
             <canvas id="myChart"></canvas>
         </div>
     </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // غيّر العناوين النصية إلى الإنجليزية
+  const map = {
+    "💰 المبيعات/المجموع": "💰 Total Sales / Sum",
+    "📦 عدد السجلات": "📦 Total Records",
+    "📈 المتوسط الحسابي": "📈 Average Value",
+    "🏆 العنصر الأكثر تكراراً": "🏆 Top Frequent Item",
+    "📊 توزيع أهم البيانات": "📊 Top Values Distribution"
+  };
+
+  // ابحث في كل العناصر النصية واستبدل العربي بالإنجليزي
+  const allElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div');
+  allElements.forEach(function (el) {
+    const txt = el.innerText.trim();
+    if (map[txt]) {
+      el.innerText = map[txt];
+    }
+  });
+});
+</script>
 
     <script>
         // 1. قراءة البيانات من الرابط
@@ -104,3 +125,4 @@
     </script>
 </body>
 </html>
+
