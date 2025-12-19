@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>تقرير الأداء</title>
+    <!-- استدعاء مكتبة تيليجرام -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* التصميم والألوان */
+        :root { --bg-color: #f3f4f6; --card-bg: #ffffff; --text-color: #1f2937; --accent: #2563eb; }
+        body {
+            font-family: sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); margin: 0; padding: 20px;
+        }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h2 { margin: 0; font-size: 1.4rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;
+        }
+        .card.full { grid-column: span 2; }
+        .icon { font-size: 2rem; margin-bottom: 5px; }
+        .label { font-size: 0.9rem; color: #6b7280; margin-bottom: 5px; }
+        .value { font-size: 1.3rem; font-weight: bold; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>📊 ملخص حسابك</h2>
+        <p id="date-text" style="font-size: 0.8rem; color: gray;">...</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="icon">💰</div>
+            <div class="label">المبيعات</div>
+            <div class="value" id="sales">-</div>
+        </div>
+        <div class="card">
+            <div class="icon">🛒</div>
+            <div class="label">الطلبات</div>
+            <div class="value" id="orders">-</div>
+        </div>
+        <div class="card full">
+            <div class="icon">📈</div>
+            <div class="label">متوسط السلة</div>
+            <div class="value" id="avg">-</div>
+        </div>
+        <div class="card full">
+            <div class="icon">🏆</div>
+            <div class="label">المنتج الأفضل</div>
+            <div class="value" id="top">-</div>
+        </div>
+    </div>
+
+    <!-- زر إغلاق -->
+    <button onclick="Telegram.WebApp.close()" style="
+        width: 100%; margin-top: 25px; padding: 15px;
+        background: var(--accent); color: white; border: none;
+        border-radius: 10px; font-weight: bold; cursor: pointer;">
+        إغلاق التقرير
+    </button>
+
+    <script>
+        // تفعيل الويب آب
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // اجعل النافذة تملأ الشاشة
+
+        // قراءة البيانات المرسلة في الرابط
+        const params = new URLSearchParams(window.location.search);
+        
+        // عرض البيانات في الصفحة
+        document.getElementById('sales').innerText = params.get('sales') || "0";
+        document.getElementById('orders').innerText = params.get('orders') || "0";
+        document.getElementById('avg').innerText = params.get('avg') || "0";
+        document.getElementById('top').innerText = params.get('top') || "لا يوجد";
+        
+        // التاريخ الحالي
+        document.getElementById('date-text').innerText = new Date().toLocaleDateString('ar-EG');
+
+        // دعم الوضع الليلي (Dark Mode)
+        if (tg.colorScheme === 'dark') {
+            document.body.style.setProperty('--bg-color', '#18222d');
+            document.body.style.setProperty('--card-bg', '#283441');
+            document.body.style.setProperty('--text-color', '#ffffff');
+        }
+    </script>
+</body>
+</html>
